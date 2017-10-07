@@ -1,0 +1,59 @@
+const puppeteer = require('puppeteer');
+
+(async () => {
+  const browser = await puppeteer.launch({headless: false});
+  const page = await browser.newPage();
+  await page.goto('https://secure.logmeinrescue.com/account/login', {waitUntil: 'load'});
+
+  //Find and Focus Email Text Area
+  await page.focus('#Email').then(function() {
+  	//Enter Email Address into Email Text Area
+  	 page.type('REMOVEDFORSECURITYPURPOSES').then(function(){
+  	 	//Find and Focus Password Text Area
+  	 	page.focus('#Password').then(function() {
+  	 		//Enter Password into Password Text Area
+  	 		page.type('REMOVEDFORSECURITYPURPOSES').then(function() {
+  	 			//Click on the continue button to complete login process.
+  	 			page.click('.endBtns > a.button.submit');  	 			
+  	 		});
+  	 	});
+  	 });
+  });
+
+  //Wait for Login to complete, then navigate to the LogMeIn Command Center to extract data
+  await page.waitForNavigation();
+  await page.goto('https://secure.logmeinrescue.com/CommandCenter', {waitUntil: 'networkidle'});
+  
+  //Figure out the number of Missed Chats and print it
+  await page.evaluate(() => {
+    function goForMissedChats() {
+        var promise = new Promise(function(resolve, reject) {
+            window.setTimeout(function() {
+                resolve($('span.red').text());
+            }, 5000);
+        });
+        return promise; 
+    }
+    return goForMissedChats();
+  }).then(function(val){
+  	var count = val[0];
+  	console.log("Missed Chats: " + count);
+  });
+
+  //Figure out the number of Available Techs and print it
+  await page.evaluate(() => {
+    function goForAvailableChatTechs() {
+        var promise = new Promise(function(resolve, reject) {
+            window.setTimeout(function() {
+                resolve($('span.green').text());
+            }, 5000);
+        });
+        return promise; 
+    }
+    return goForAvailableChatTechs();
+  }).then(function(val){
+  	var count = val[0];
+  	console.log("Available Chat Techs: " + count);
+  });
+})();
+
